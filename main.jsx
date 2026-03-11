@@ -130,7 +130,7 @@ function LineCard({ line, vsName, data, onChange }) {
           <div style={{ color: "#f97316", fontWeight: "700", fontSize: "15px", letterSpacing: "0.05em" }}>
             {line.toUpperCase()}
           </div>
-          <div style={{ color: "#64748b", fontSize: "12px", marginTop: "2px" }}>{vsName}</div>
+          <div style={{ color: "#94a3b8", fontSize: "12px", marginTop: "2px" }}>{vsName}</div>
         </div>
         <div style={{
           width: "8px", height: "8px", borderRadius: "50%",
@@ -157,7 +157,7 @@ function LineCard({ line, vsName, data, onChange }) {
                 width: "100%", background: "#0f1319", border: "1px solid #2a3347",
                 borderRadius: "4px", padding: "8px 10px", color: "#e2e8f0",
                 fontSize: "14px", outline: "none", boxSizing: "border-box",
-                fontFamily: "'JetBrains Mono', 'DM Mono', monospace",
+                fontFamily: "'JetBrains Mono', monospace",
               }}
             />
           </div>
@@ -214,7 +214,7 @@ export default function EOSReportApp() {
     background: "#1a1f2e", border: "1px solid #2a3347",
     borderRadius: "6px", padding: "10px 14px", color: "#e2e8f0",
     fontSize: "14px", outline: "none", width: "100%", boxSizing: "border-box",
-    fontFamily: "'JetBrains Mono', 'DM Mono', monospace",
+    fontFamily: "'JetBrains Mono', monospace",
   };
 
   return (
@@ -484,7 +484,7 @@ export default function EOSReportApp() {
               borderRadius: "8px", padding: "24px", fontSize: "13px",
               color: "#94a3b8", lineHeight: "1.7", whiteSpace: "pre-wrap",
               wordBreak: "break-word", margin: 0,
-              fontFamily: "'JetBrains Mono', 'DM Mono', monospace",
+              fontFamily: "'JetBrains Mono', monospace",
             }}>
               {emailBody}
             </pre>
