@@ -55,7 +55,7 @@ Tracked across all lines in both value streams, plus shift-level metadata: super
 
 ## 🚀 Getting Started
 
-No installation required. This is a standalone React app — run it locally or host it on any static file server.
+Requires Node.js 18+. Uses Vite as the build tool.
 
 ### Run Locally
 
@@ -63,10 +63,10 @@ No installation required. This is a standalone React app — run it locally or h
 git clone <your-repo-url>
 cd eos-generator
 npm install
-npm start
+npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
+Open [http://localhost:5173](http://localhost:5173).
 
 ### Or Just Open It
 
@@ -78,7 +78,8 @@ If hosted internally, navigate to the URL your team provides. No login required.
 
 | Layer | Technology |
 |---|---|
-| Framework | React 17 |
+| Framework | React 18 |
+| Build tool | Vite 5 |
 | State | React hooks (useState) |
 | Export | CSV via Blob download |
 | Styling | Inline styles — no external CSS dependencies |
