@@ -1,0 +1,7 @@
+services:
+  - type: web
+    name: bak-eos-system
+    env: static
+    buildCommand: npm install && npm run build
+    staticPublishPath: ./dist
+    pullRequestPreviewsEnabled: false
