@@ -117,6 +117,7 @@ function LineCard({ line, vsName, data, onChange }) {
     <div style={{
       background: "#1a1f2e",
       border: "1px solid #2a3347",
+      borderLeft: "3px solid #f97316",
       borderRadius: "8px",
       padding: "20px",
       marginBottom: "16px",
@@ -129,14 +130,14 @@ function LineCard({ line, vsName, data, onChange }) {
           <div style={{ color: "#f97316", fontWeight: "700", fontSize: "15px", letterSpacing: "0.05em" }}>
             {line.toUpperCase()}
           </div>
-          <div style={{ color: "#4a5568", fontSize: "12px", marginTop: "2px" }}>{vsName}</div>
+          <div style={{ color: "#94a3b8", fontSize: "12px", marginTop: "2px" }}>{vsName}</div>
         </div>
         <div style={{
           width: "8px", height: "8px", borderRadius: "50%",
           background: data.output ? "#22c55e" : "#374151",
         }} />
       </div>
-      <div style={{
+      <div className="line-fields-grid" style={{
         display: "grid",
         gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))",
         gap: "12px",
@@ -144,8 +145,9 @@ function LineCard({ line, vsName, data, onChange }) {
         {fields.map(({ key, label, type }) => (
           <div key={key}>
             <label style={{
-              display: "block", fontSize: "11px", color: "#6b7280",
-              marginBottom: "4px", letterSpacing: "0.08em", textTransform: "uppercase",
+              display: "block", fontSize: "12px", color: "#94a3b8",
+              marginBottom: "6px", letterSpacing: "0.05em", textTransform: "uppercase",
+              fontWeight: "500",
             }}>{label}</label>
             <input
               type={type}
@@ -155,9 +157,8 @@ function LineCard({ line, vsName, data, onChange }) {
                 width: "100%", background: "#0f1319", border: "1px solid #2a3347",
                 borderRadius: "4px", padding: "8px 10px", color: "#e2e8f0",
                 fontSize: "14px", outline: "none", boxSizing: "border-box",
+                fontFamily: "'JetBrains Mono', monospace",
               }}
-              onFocus={(e) => e.target.style.borderColor = "#f97316"}
-              onBlur={(e) => e.target.style.borderColor = "#2a3347"}
             />
           </div>
         ))}
@@ -213,12 +214,13 @@ export default function EOSReportApp() {
     background: "#1a1f2e", border: "1px solid #2a3347",
     borderRadius: "6px", padding: "10px 14px", color: "#e2e8f0",
     fontSize: "14px", outline: "none", width: "100%", boxSizing: "border-box",
+    fontFamily: "'JetBrains Mono', monospace",
   };
 
   return (
     <div style={{
       minHeight: "100vh", background: "#0a0d14", color: "#e2e8f0",
-      fontFamily: "'DM Mono', 'Courier New', monospace",
+      fontFamily: "'Inter', system-ui, -apple-system, sans-serif",
     }}>
       {/* Header */}
       <div style={{
@@ -239,15 +241,15 @@ export default function EOSReportApp() {
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
           <div style={{
-            fontSize: "12px", color: "#6b7280",
+            fontSize: "12px", color: "#94a3b8",
             background: "#1a1f2e", padding: "4px 12px", borderRadius: "20px",
             border: "1px solid #2a3347",
           }}>
             {filledLines}/{ALL_LINES.length} lines entered
           </div>
           <div style={{
-            width: "80px", height: "6px", background: "#1a1f2e",
-            borderRadius: "3px", overflow: "hidden",
+            width: "120px", height: "8px", background: "#1a1f2e",
+            borderRadius: "4px", overflow: "hidden",
           }}>
             <div style={{
               width: `${progress}%`, height: "100%",
@@ -287,13 +289,19 @@ export default function EOSReportApp() {
           <>
             {/* Meta fields */}
             <div style={{
+              fontSize: "12px", color: "#64748b", letterSpacing: "0.12em",
+              textTransform: "uppercase", marginBottom: "12px", fontWeight: "600",
+            }}>
+              Shift Information
+            </div>
+            <div className="meta-grid" style={{
               display: "grid", gridTemplateColumns: "1fr 1fr 1fr",
               gap: "16px", marginBottom: "32px",
               background: "#0f1319", padding: "24px",
               borderRadius: "8px", border: "1px solid #1e2636",
             }}>
               <div>
-                <label style={{ display: "block", fontSize: "11px", color: "#6b7280", marginBottom: "6px", letterSpacing: "0.08em", textTransform: "uppercase" }}>
+                <label style={{ display: "block", fontSize: "12px", color: "#94a3b8", marginBottom: "6px", letterSpacing: "0.05em", textTransform: "uppercase", fontWeight: "500" }}>
                   Supervisor
                 </label>
                 <input
@@ -302,12 +310,10 @@ export default function EOSReportApp() {
                   onChange={(e) => handleMeta("supervisor", e.target.value)}
                   placeholder="Your name"
                   style={inputStyle}
-                  onFocus={(e) => e.target.style.borderColor = "#f97316"}
-                  onBlur={(e) => e.target.style.borderColor = "#2a3347"}
                 />
               </div>
               <div>
-                <label style={{ display: "block", fontSize: "11px", color: "#6b7280", marginBottom: "6px", letterSpacing: "0.08em", textTransform: "uppercase" }}>
+                <label style={{ display: "block", fontSize: "12px", color: "#94a3b8", marginBottom: "6px", letterSpacing: "0.05em", textTransform: "uppercase", fontWeight: "500" }}>
                   Date
                 </label>
                 <input
@@ -315,20 +321,16 @@ export default function EOSReportApp() {
                   value={formData.date}
                   onChange={(e) => handleMeta("date", e.target.value)}
                   style={inputStyle}
-                  onFocus={(e) => e.target.style.borderColor = "#f97316"}
-                  onBlur={(e) => e.target.style.borderColor = "#2a3347"}
                 />
               </div>
               <div>
-                <label style={{ display: "block", fontSize: "11px", color: "#6b7280", marginBottom: "6px", letterSpacing: "0.08em", textTransform: "uppercase" }}>
+                <label style={{ display: "block", fontSize: "12px", color: "#94a3b8", marginBottom: "6px", letterSpacing: "0.05em", textTransform: "uppercase", fontWeight: "500" }}>
                   Shift
                 </label>
                 <select
                   value={formData.shift}
                   onChange={(e) => handleMeta("shift", e.target.value)}
                   style={{ ...inputStyle, cursor: "pointer" }}
-                  onFocus={(e) => e.target.style.borderColor = "#f97316"}
-                  onBlur={(e) => e.target.style.borderColor = "#2a3347"}
                 >
                   {SHIFTS.map((s) => <option key={s} value={s}>{s}</option>)}
                 </select>
@@ -336,20 +338,31 @@ export default function EOSReportApp() {
             </div>
 
             {/* Value Streams */}
+            <div style={{
+              fontSize: "12px", color: "#64748b", letterSpacing: "0.12em",
+              textTransform: "uppercase", marginBottom: "20px", fontWeight: "600",
+            }}>
+              Production Data
+            </div>
             {VALUE_STREAMS.map((vs) => (
-              <div key={vs.id} style={{ marginBottom: "32px" }}>
+              <div key={vs.id} style={{ marginBottom: "40px" }}>
                 <div style={{
                   display: "flex", alignItems: "center", gap: "12px",
-                  marginBottom: "16px",
+                  marginBottom: "20px", paddingBottom: "12px",
+                  borderBottom: "2px solid #1e2636",
                 }}>
                   <div style={{
-                    height: "1px", flex: 1, background: "#1e2636",
-                  }} />
+                    background: "#f97316", color: "#000", fontWeight: "700",
+                    fontSize: "11px", padding: "3px 10px", borderRadius: "3px",
+                    letterSpacing: "0.08em",
+                  }}>
+                    {vs.id === "vs1" ? "VS1" : "VS2"}
+                  </div>
                   <span style={{
-                    color: "#4a5568", fontSize: "11px", letterSpacing: "0.15em",
+                    color: "#e2e8f0", fontSize: "14px", letterSpacing: "0.05em",
                     textTransform: "uppercase", whiteSpace: "nowrap",
+                    fontWeight: "600",
                   }}>{vs.name}</span>
-                  <div style={{ height: "1px", flex: 1, background: "#1e2636" }} />
                 </div>
                 {vs.lines.map((line) => (
                   <LineCard
@@ -369,8 +382,9 @@ export default function EOSReportApp() {
               borderRadius: "8px", border: "1px solid #1e2636", marginBottom: "24px",
             }}>
               <label style={{
-                display: "block", fontSize: "11px", color: "#6b7280",
-                marginBottom: "8px", letterSpacing: "0.08em", textTransform: "uppercase",
+                display: "block", fontSize: "12px", color: "#94a3b8",
+                marginBottom: "8px", letterSpacing: "0.05em", textTransform: "uppercase",
+                fontWeight: "500",
               }}>Notes / Issues</label>
               <textarea
                 value={formData.notes}
@@ -380,8 +394,6 @@ export default function EOSReportApp() {
                 style={{
                   ...inputStyle, resize: "vertical", fontFamily: "inherit",
                 }}
-                onFocus={(e) => e.target.style.borderColor = "#f97316"}
-                onBlur={(e) => e.target.style.borderColor = "#2a3347"}
               />
             </div>
 
@@ -436,7 +448,7 @@ export default function EOSReportApp() {
                 <div style={{ fontSize: "16px", color: "#e2e8f0", fontWeight: "600" }}>
                   EOS Email Draft
                 </div>
-                <div style={{ fontSize: "12px", color: "#4a5568", marginTop: "4px" }}>
+                <div style={{ fontSize: "12px", color: "#64748b", marginTop: "4px" }}>
                   Copy and paste into Outlook — attach the 4 downloaded reports
                 </div>
               </div>
@@ -460,7 +472,7 @@ export default function EOSReportApp() {
               borderRadius: "6px", padding: "12px 16px", marginBottom: "12px",
               fontSize: "13px",
             }}>
-              <span style={{ color: "#4a5568", marginRight: "8px" }}>SUBJECT:</span>
+              <span style={{ color: "#64748b", marginRight: "8px" }}>SUBJECT:</span>
               <span style={{ color: "#f97316" }}>
                 EOS Report — {formData.shift} Shift | {formData.date} | {formData.supervisor || "Supervisor"}
               </span>
@@ -472,6 +484,7 @@ export default function EOSReportApp() {
               borderRadius: "8px", padding: "24px", fontSize: "13px",
               color: "#94a3b8", lineHeight: "1.7", whiteSpace: "pre-wrap",
               wordBreak: "break-word", margin: 0,
+              fontFamily: "'JetBrains Mono', monospace",
             }}>
               {emailBody}
             </pre>
@@ -480,7 +493,7 @@ export default function EOSReportApp() {
               <button
                 onClick={() => setActiveTab("entry")}
                 style={{
-                  background: "transparent", color: "#4a5568",
+                  background: "transparent", color: "#64748b",
                   border: "1px solid #2a3347", padding: "12px 20px",
                   borderRadius: "6px", cursor: "pointer", fontSize: "13px",
                   fontFamily: "inherit",
