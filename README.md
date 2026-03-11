@@ -61,7 +61,7 @@ No installation required. This is a standalone React app — run it locally or h
 
 ```bash
 git clone <your-repo-url>
-cd bak-eos
+cd eos-generator
 npm install
 npm start
 ```
