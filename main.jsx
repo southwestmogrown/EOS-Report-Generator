@@ -4,7 +4,7 @@ import { useState } from "react";
 
 const VALUE_STREAMS = [
   { id: "vs1", name: "HFC (Hard Folding Covers)", lines: ["Line 1", "Line 2", "Line 3", "Line 4"] },
-  { id: "vs2", name: "HRC (Hard Rolling Cover)", lines: ["Line 5", "Line 6"] },
+  { id: "vs2", name: "HRC (Hard Rolling Cover)", lines: ["Line 1", "Line 2"] },
 ];
 
 const ALL_LINES = VALUE_STREAMS.flatMap((vs) =>
