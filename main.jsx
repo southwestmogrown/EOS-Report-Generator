@@ -8,7 +8,7 @@ const VALUE_STREAMS = [
 ];
 
 const ALL_LINES = VALUE_STREAMS.flatMap((vs) =>
-  vs.lines.map((line) => ({ vsId: vs.id, vsName: vs.name, line }))
+  vs.lines.map((line) => ({ vsId: vs.id, vsName: vs.name, line, lineKey: `${vs.id}:${line}` }))
 );
 
 const EMPTY_LINE = {
@@ -35,7 +35,7 @@ const SHIFTS = ["Day", "Night"];
 
 function emptyFormData() {
   const lines = {};
-  ALL_LINES.forEach(({ line }) => { lines[line] = { ...EMPTY_LINE }; });
+  ALL_LINES.forEach(({ lineKey }) => { lines[lineKey] = { ...EMPTY_LINE }; });
   return {
     supervisor: "",
     date: new Date().toISOString().split("T")[0],
@@ -53,8 +53,8 @@ function generateCSV(data, title, activeLines) {
     "Headcount", "Order at Packout", "Remaining on Order",
     "Remaining on Run Sheet", "Changeovers",
   ];
-  const rows = activeLines.map(({ line }) => {
-    const l = data.lines[line];
+  const rows = activeLines.map(({ lineKey, line }) => {
+    const l = data.lines[lineKey];
     return [
       line, l.output, l.hpu, l.hoursWorked, l.firstPassYield,
       l.headcount, l.orderAtPackout, l.remainingOnOrder,
@@ -82,16 +82,16 @@ function downloadCSV(content, filename) {
   URL.revokeObjectURL(url);
 }
 
-function generateEmailBody(data, activeLines) {
-  const lineRows = activeLines.map(({ vsName, line }) => {
-    const l = data.lines[line];
+function generateEmailBody(data, activeLines, streamName) {
+  const lineRows = activeLines.map(({ vsName, line, lineKey }) => {
+    const l = data.lines[lineKey];
     return `  ${line} (${vsName})
     Output: ${l.output || "—"}  |  HPU: ${l.hpu || "0"}  |  FPY: ${l.firstPassYield || "—"}%
     Headcount: ${l.headcount || "—"}  |  Hours Worked: ${l.hoursWorked || "10"}  |  Changeovers: ${l.changeovers || "—"}
     Order @ Packout: ${l.orderAtPackout || "—"}  |  Remaining on Order: ${l.remainingOnOrder || "—"}  |  Remaining on Run Sheet: ${l.remainingOnRunSheet || "—"}`;
   }).join("\n\n");
 
-  return `End of Shift Report — ${data.shift} Shift | ${data.date}
+  return `End of Shift Report (${streamName}) — ${data.shift} Shift | ${data.date}
 Supervisor: ${data.supervisor}
 ${"─".repeat(60)}
 
@@ -110,7 +110,7 @@ Generated automatically by BAK EOS System`;
 
 // ── Sub-components ─────────────────────────────────────────────────────────────
 
-function LineCard({ vsId, line, vsName, data, onChange, onHide }) {
+function LineCard({ lineKey, vsId, line, vsName, data, onChange, onHide }) {
   const fields = [
     { key: "output", label: "Output", type: "number" },
     { key: "headcount", label: "Headcount", type: "number" },
@@ -183,7 +183,7 @@ function LineCard({ vsId, line, vsName, data, onChange, onHide }) {
               type={type}
               value={data[key]}
               readOnly={readOnly}
-              onChange={(e) => onChange(line, key, e.target.value)}
+              onChange={(e) => onChange(lineKey, key, e.target.value)}
               style={{
                 width: "100%", background: readOnly ? "#0a0d14" : "#0f1319", border: "1px solid #2a3347",
                 borderRadius: "4px", padding: "8px 10px", color: readOnly ? "#64748b" : "#e2e8f0",
@@ -205,19 +205,20 @@ export default function EOSReportApp() {
   const [formData, setFormData] = useState(emptyFormData());
   const [hiddenLines, setHiddenLines] = useState(new Set());
   const [emailCopied, setEmailCopied] = useState(false);
-  const [activeTab, setActiveTab] = useState("entry");
+  const [activeStream, setActiveStream] = useState("vs1");
+  const [activeView, setActiveView] = useState("entry");
 
   const handleMeta = (key, value) => setFormData((p) => ({ ...p, [key]: value }));
 
-  const handleLine = (line, field, value) =>
+  const handleLine = (lineKey, field, value) =>
     setFormData((p) => {
-      const updatedLine = { ...p.lines[line], [field]: value };
+      const updatedLine = { ...p.lines[lineKey], [field]: value };
       if (field === "output" || field === "headcount" || field === "hoursWorked") {
         updatedLine.hpu = calculateHPU(updatedLine);
       }
       return {
         ...p,
-        lines: { ...p.lines, [line]: updatedLine },
+        lines: { ...p.lines, [lineKey]: updatedLine },
       };
     });
 
@@ -235,7 +236,9 @@ export default function EOSReportApp() {
       return next;
     });
 
-  const activeLines = ALL_LINES.filter(({ vsId, line }) => !hiddenLines.has(`${vsId}:${line}`));
+  const currentStream = VALUE_STREAMS.find((vs) => vs.id === activeStream);
+  const streamLines = ALL_LINES.filter(({ vsId }) => vsId === activeStream);
+  const activeLines = streamLines.filter(({ vsId, line }) => !hiddenLines.has(`${vsId}:${line}`));
 
   const handleDownloadAll = () => {
     const reports = [
@@ -250,7 +253,7 @@ export default function EOSReportApp() {
     });
   };
 
-  const emailBody = generateEmailBody(formData, activeLines);
+  const emailBody = generateEmailBody(formData, activeLines, currentStream.name);
 
   const handleCopyEmail = () => {
     navigator.clipboard.writeText(emailBody);
@@ -262,7 +265,7 @@ export default function EOSReportApp() {
     if (window.confirm("Reset all fields?")) setFormData(emptyFormData());
   };
 
-  const filledLines = activeLines.filter(({ line }) => formData.lines[line].output).length;
+  const filledLines = activeLines.filter(({ lineKey }) => formData.lines[lineKey].output).length;
   const progress = activeLines.length > 0 ? Math.round((filledLines / activeLines.length) * 100) : 0;
 
   const inputStyle = {
@@ -320,27 +323,27 @@ export default function EOSReportApp() {
         background: "#0f1319", borderBottom: "1px solid #1e2636",
         padding: "0 32px", display: "flex", gap: "0",
       }}>
-        {["entry", "email"].map((tab) => (
+        {VALUE_STREAMS.map((vs) => (
           <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
+            key={vs.id}
+            onClick={() => { setActiveStream(vs.id); setActiveView("entry"); }}
             style={{
               background: "none", border: "none", cursor: "pointer",
               padding: "14px 20px", fontSize: "13px", letterSpacing: "0.08em",
               textTransform: "uppercase",
-              color: activeTab === tab ? "#FFB800" : "#4a5568",
-              borderBottom: activeTab === tab ? "2px solid #FFB800" : "2px solid transparent",
+              color: activeStream === vs.id ? "#FFB800" : "#4a5568",
+              borderBottom: activeStream === vs.id ? "2px solid #FFB800" : "2px solid transparent",
               transition: "all 0.2s",
             }}
           >
-            {tab === "entry" ? "Data Entry" : "Email Preview"}
+            {vs.id === "vs1" ? "HFC" : "HRC"}
           </button>
         ))}
       </div>
 
       <div style={{ padding: "32px", maxWidth: "1100px", margin: "0 auto" }}>
 
-        {activeTab === "entry" && (
+        {activeView === "entry" && (
           <>
             {/* Meta fields */}
             <div style={{
@@ -392,43 +395,26 @@ export default function EOSReportApp() {
               </div>
             </div>
 
-            {/* Value Streams */}
+            {/* Production Data for current stream */}
             <div style={{
               fontSize: "12px", color: "#64748b", letterSpacing: "0.12em",
               textTransform: "uppercase", marginBottom: "20px", fontWeight: "600",
             }}>
-              Production Data
+              Production Data — {currentStream.name}
             </div>
-            {VALUE_STREAMS.map((vs) => {
-              const visibleLines = vs.lines.filter((line) => !hiddenLines.has(`${vs.id}:${line}`));
-              const hiddenVsLines = vs.lines.filter((line) => hiddenLines.has(`${vs.id}:${line}`));
+            {(() => {
+              const visibleLines = currentStream.lines.filter((line) => !hiddenLines.has(`${currentStream.id}:${line}`));
+              const hiddenVsLines = currentStream.lines.filter((line) => hiddenLines.has(`${currentStream.id}:${line}`));
               return (
-                <div key={vs.id} style={{ marginBottom: "40px" }}>
-                  <div style={{
-                    display: "flex", alignItems: "center", gap: "12px",
-                    marginBottom: "20px", paddingBottom: "12px",
-                    borderBottom: "2px solid #1e2636",
-                  }}>
-                    <div style={{
-                      background: "#FFB800", color: "#000", fontWeight: "700",
-                      fontSize: "11px", padding: "3px 10px", borderRadius: "3px",
-                      letterSpacing: "0.08em",
-                    }}>
-                      {vs.id === "vs1" ? "VS1" : "VS2"}
-                    </div>
-                    <span style={{
-                      color: "#e2e8f0", fontSize: "14px", letterSpacing: "0.05em",
-                      textTransform: "uppercase", whiteSpace: "nowrap",
-                      fontWeight: "600",
-                    }}>{vs.name}</span>
-                  </div>
+                <div style={{ marginBottom: "40px" }}>
                   {visibleLines.map((line) => (
                     <LineCard
-                      key={line}
-                      vsId={vs.id}
+                      key={`${currentStream.id}:${line}`}
+                      lineKey={`${currentStream.id}:${line}`}
+                      vsId={currentStream.id}
                       line={line}
-                      vsName={vs.name}
-                      data={formData.lines[line]}
+                      vsName={currentStream.name}
+                      data={formData.lines[`${currentStream.id}:${line}`]}
                       onChange={handleLine}
                       onHide={handleHideLine}
                     />
@@ -451,7 +437,7 @@ export default function EOSReportApp() {
                       {hiddenVsLines.map((line) => (
                         <button
                           key={line}
-                          onClick={() => handleShowLine(vs.id, line)}
+                          onClick={() => handleShowLine(currentStream.id, line)}
                           title={`Restore ${line}`}
                           style={{
                             background: "transparent",
@@ -472,7 +458,7 @@ export default function EOSReportApp() {
                   )}
                 </div>
               );
-            })}
+            })()}
 
             {/* Notes */}
             <div style={{
@@ -510,7 +496,7 @@ export default function EOSReportApp() {
                 ↓ Download All 4 Reports
               </button>
               <button
-                onClick={() => setActiveTab("email")}
+                onClick={() => setActiveView("email")}
                 style={{
                   background: "transparent", color: "#FFB800",
                   border: "1px solid #FFB800", padding: "14px 28px",
@@ -536,7 +522,7 @@ export default function EOSReportApp() {
           </>
         )}
 
-        {activeTab === "email" && (
+        {activeView === "email" && (
           <div>
             <div style={{
               display: "flex", justifyContent: "space-between",
@@ -544,7 +530,7 @@ export default function EOSReportApp() {
             }}>
               <div>
                 <div style={{ fontSize: "16px", color: "#e2e8f0", fontWeight: "600" }}>
-                  EOS Email Draft
+                  EOS Email Draft — {currentStream.name}
                 </div>
                 <div style={{ fontSize: "12px", color: "#64748b", marginTop: "4px" }}>
                   Copy and paste into Outlook — attach the 4 downloaded reports
@@ -572,7 +558,7 @@ export default function EOSReportApp() {
             }}>
               <span style={{ color: "#64748b", marginRight: "8px" }}>SUBJECT:</span>
               <span style={{ color: "#FFB800" }}>
-                EOS Report — {formData.shift} Shift | {formData.date} | {formData.supervisor || "Supervisor"}
+                EOS Report ({currentStream.name}) — {formData.shift} Shift | {formData.date} | {formData.supervisor || "Supervisor"}
               </span>
             </div>
 
@@ -589,7 +575,7 @@ export default function EOSReportApp() {
 
             <div style={{ marginTop: "16px", display: "flex", gap: "12px" }}>
               <button
-                onClick={() => setActiveTab("entry")}
+                onClick={() => setActiveView("entry")}
                 style={{
                   background: "transparent", color: "#64748b",
                   border: "1px solid #2a3347", padding: "12px 20px",
