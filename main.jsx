@@ -22,7 +22,7 @@ const EMPTY_LINE = {
   changeovers: "",
 };
 
-const SHIFTS = ["Day", "Afternoon", "Night"];
+const SHIFTS = ["Day", "Night"];
 
 function emptyFormData() {
   const lines = {};

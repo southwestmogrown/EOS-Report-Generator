@@ -32,14 +32,14 @@ Supervisors enter per-line production data once. The tool generates everything e
 | **Remaining on Run Sheet** | Units left on the run sheet |
 | **Changeovers** | Number of changeovers during shift |
 
-Tracked across all lines in both value streams, plus shift-level metadata: supervisor name, date, shift (Day / Afternoon / Night), and notes for the incoming shift.
+Tracked across all lines in both value streams, plus shift-level metadata: supervisor name, date, shift (Day / Night), and notes for the incoming shift.
 
 ---
 
 ## 🏭 Built For
 
 - **Production supervisors** logging end-of-shift data
-- **All three shifts** — Day, Afternoon, Night
+- **Both shifts** — Day, Night
 - **Both value streams** across all production lines
 - Anyone who has ever filled out the same report four different ways
 
