@@ -15,7 +15,6 @@ const EMPTY_LINE = {
   output: "",
   hpu: "0",
   hoursWorked: "10",
-  firstPassYield: "",
   headcount: "",
   orderAtPackout: "",
   remainingOnOrder: "",
@@ -49,14 +48,14 @@ function emptyFormData() {
 
 function generateCSV(data, title, activeLines) {
   const headers = [
-    "Line", "Output", "HPU", "Hours Worked", "First Pass Yield (%)",
+    "Line", "Output", "HPU", "Hours Worked",
     "Headcount", "Order at Packout", "Remaining on Order",
     "Remaining on Run Sheet", "Changeovers",
   ];
   const rows = activeLines.map(({ lineKey, line }) => {
     const l = data.lines[lineKey];
     return [
-      line, l.output, l.hpu, l.hoursWorked, l.firstPassYield,
+      line, l.output, l.hpu, l.hoursWorked,
       l.headcount, l.orderAtPackout, l.remainingOnOrder,
       l.remainingOnRunSheet, l.changeovers,
     ].join(",");
@@ -86,7 +85,7 @@ function generateEmailBody(data, activeLines, streamName) {
   const lineRows = activeLines.map(({ vsName, line, lineKey }) => {
     const l = data.lines[lineKey];
     return `  ${line} (${vsName})
-    Output: ${l.output || "—"}  |  HPU: ${l.hpu || "0"}  |  FPY: ${l.firstPassYield || "—"}%
+    Output: ${l.output || "—"}  |  HPU: ${l.hpu || "0"}
     Headcount: ${l.headcount || "—"}  |  Hours Worked: ${l.hoursWorked || "10"}  |  Changeovers: ${l.changeovers || "—"}
     Order @ Packout: ${l.orderAtPackout || "—"}  |  Remaining on Order: ${l.remainingOnOrder || "—"}  |  Remaining on Run Sheet: ${l.remainingOnRunSheet || "—"}`;
   }).join("\n\n");
@@ -116,7 +115,6 @@ function LineCard({ lineKey, vsId, line, vsName, data, onChange, onHide }) {
     { key: "headcount", label: "Headcount", type: "number" },
     { key: "hoursWorked", label: "Hours Worked", type: "number" },
     { key: "hpu", label: "HPU", type: "number", readOnly: true },
-    { key: "firstPassYield", label: "FPY %", type: "number" },
     { key: "orderAtPackout", label: "Order @ Packout", type: "text" },
     { key: "remainingOnOrder", label: "Remaining on Order", type: "number" },
     { key: "remainingOnRunSheet", label: "Remaining on Run Sheet", type: "number" },
