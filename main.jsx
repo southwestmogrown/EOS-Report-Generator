@@ -117,7 +117,7 @@ function LineCard({ line, vsName, data, onChange }) {
     <div style={{
       background: "#1a1f2e",
       border: "1px solid #2a3347",
-      borderLeft: "3px solid #f97316",
+      borderLeft: "3px solid #FFB800",
       borderRadius: "8px",
       padding: "20px",
       marginBottom: "16px",
@@ -127,7 +127,7 @@ function LineCard({ line, vsName, data, onChange }) {
         alignItems: "center", marginBottom: "16px",
       }}>
         <div>
-          <div style={{ color: "#f97316", fontWeight: "700", fontSize: "15px", letterSpacing: "0.05em" }}>
+          <div style={{ color: "#FFB800", fontWeight: "700", fontSize: "15px", letterSpacing: "0.05em" }}>
             {line.toUpperCase()}
           </div>
           <div style={{ color: "#94a3b8", fontSize: "12px", marginTop: "2px" }}>{vsName}</div>
@@ -230,7 +230,7 @@ export default function EOSReportApp() {
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
           <div style={{
-            background: "#f97316", color: "#000", fontWeight: "900",
+            background: "#FFB800", color: "#000", fontWeight: "900",
             fontSize: "13px", padding: "4px 10px", borderRadius: "4px",
             letterSpacing: "0.1em",
           }}>BAK</div>
@@ -253,7 +253,7 @@ export default function EOSReportApp() {
           }}>
             <div style={{
               width: `${progress}%`, height: "100%",
-              background: progress === 100 ? "#22c55e" : "#f97316",
+              background: progress === 100 ? "#22c55e" : "#FFB800",
               transition: "width 0.3s",
             }} />
           </div>
@@ -273,8 +273,8 @@ export default function EOSReportApp() {
               background: "none", border: "none", cursor: "pointer",
               padding: "14px 20px", fontSize: "13px", letterSpacing: "0.08em",
               textTransform: "uppercase",
-              color: activeTab === tab ? "#f97316" : "#4a5568",
-              borderBottom: activeTab === tab ? "2px solid #f97316" : "2px solid transparent",
+              color: activeTab === tab ? "#FFB800" : "#4a5568",
+              borderBottom: activeTab === tab ? "2px solid #FFB800" : "2px solid transparent",
               transition: "all 0.2s",
             }}
           >
@@ -352,7 +352,7 @@ export default function EOSReportApp() {
                   borderBottom: "2px solid #1e2636",
                 }}>
                   <div style={{
-                    background: "#f97316", color: "#000", fontWeight: "700",
+                    background: "#FFB800", color: "#000", fontWeight: "700",
                     fontSize: "11px", padding: "3px 10px", borderRadius: "3px",
                     letterSpacing: "0.08em",
                   }}>
@@ -402,7 +402,7 @@ export default function EOSReportApp() {
               <button
                 onClick={handleDownloadAll}
                 style={{
-                  background: "#f97316", color: "#000", border: "none",
+                  background: "#FFB800", color: "#000", border: "none",
                   padding: "14px 28px", borderRadius: "6px", cursor: "pointer",
                   fontWeight: "700", fontSize: "13px", letterSpacing: "0.08em",
                   textTransform: "uppercase", fontFamily: "inherit",
@@ -414,8 +414,8 @@ export default function EOSReportApp() {
               <button
                 onClick={() => setActiveTab("email")}
                 style={{
-                  background: "transparent", color: "#f97316",
-                  border: "1px solid #f97316", padding: "14px 28px",
+                  background: "transparent", color: "#FFB800",
+                  border: "1px solid #FFB800", padding: "14px 28px",
                   borderRadius: "6px", cursor: "pointer", fontWeight: "700",
                   fontSize: "13px", letterSpacing: "0.08em", textTransform: "uppercase",
                   fontFamily: "inherit", flex: 1, minWidth: "200px",
@@ -455,7 +455,7 @@ export default function EOSReportApp() {
               <button
                 onClick={handleCopyEmail}
                 style={{
-                  background: emailCopied ? "#22c55e" : "#f97316",
+                  background: emailCopied ? "#22c55e" : "#FFB800",
                   color: "#000", border: "none", padding: "10px 24px",
                   borderRadius: "6px", cursor: "pointer", fontWeight: "700",
                   fontSize: "13px", letterSpacing: "0.08em", fontFamily: "inherit",
@@ -473,7 +473,7 @@ export default function EOSReportApp() {
               fontSize: "13px",
             }}>
               <span style={{ color: "#64748b", marginRight: "8px" }}>SUBJECT:</span>
-              <span style={{ color: "#f97316" }}>
+              <span style={{ color: "#FFB800" }}>
                 EOS Report — {formData.shift} Shift | {formData.date} | {formData.supervisor || "Supervisor"}
               </span>
             </div>
@@ -504,7 +504,7 @@ export default function EOSReportApp() {
               <button
                 onClick={handleDownloadAll}
                 style={{
-                  background: "#f97316", color: "#000", border: "none",
+                  background: "#FFB800", color: "#000", border: "none",
                   padding: "12px 24px", borderRadius: "6px", cursor: "pointer",
                   fontWeight: "700", fontSize: "13px", fontFamily: "inherit",
                 }}
