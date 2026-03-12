@@ -38,13 +38,13 @@ function emptyFormData() {
 
 // ── CSV / Report Generation ───────────────────────────────────────────────────
 
-function generateCSV(data, title) {
+function generateCSV(data, title, activeLines) {
   const headers = [
     "Line", "Output", "HPU", "First Pass Yield (%)",
     "Headcount", "Order at Packout", "Remaining on Order",
     "Remaining on Run Sheet", "Changeovers",
   ];
-  const rows = ALL_LINES.map(({ line }) => {
+  const rows = activeLines.map(({ line }) => {
     const l = data.lines[line];
     return [
       line, l.output, l.hpu, l.firstPassYield,
@@ -73,8 +73,8 @@ function downloadCSV(content, filename) {
   URL.revokeObjectURL(url);
 }
 
-function generateEmailBody(data) {
-  const lineRows = ALL_LINES.map(({ vsName, line }) => {
+function generateEmailBody(data, activeLines) {
+  const lineRows = activeLines.map(({ vsName, line }) => {
     const l = data.lines[line];
     return `  ${line} (${vsName})
     Output: ${l.output || "—"}  |  HPU: ${l.hpu || "—"}  |  FPY: ${l.firstPassYield || "—"}%
@@ -101,7 +101,7 @@ Generated automatically by BAK EOS System`;
 
 // ── Sub-components ─────────────────────────────────────────────────────────────
 
-function LineCard({ line, vsName, data, onChange }) {
+function LineCard({ vsId, line, vsName, data, onChange, onHide }) {
   const fields = [
     { key: "output", label: "Output", type: "number" },
     { key: "hpu", label: "HPU", type: "number" },
@@ -132,10 +132,30 @@ function LineCard({ line, vsName, data, onChange }) {
           </div>
           <div style={{ color: "#94a3b8", fontSize: "12px", marginTop: "2px" }}>{vsName}</div>
         </div>
-        <div style={{
-          width: "8px", height: "8px", borderRadius: "50%",
-          background: data.output ? "#22c55e" : "#374151",
-        }} />
+        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          <div style={{
+            width: "8px", height: "8px", borderRadius: "50%",
+            background: data.output ? "#22c55e" : "#374151",
+          }} />
+          <button
+            onClick={() => onHide(vsId, line)}
+            title="Hide this line for the current shift"
+            style={{
+              background: "transparent",
+              border: "1px solid #2a3347",
+              borderRadius: "4px",
+              color: "#64748b",
+              cursor: "pointer",
+              fontSize: "11px",
+              padding: "3px 8px",
+              fontFamily: "inherit",
+              letterSpacing: "0.05em",
+              lineHeight: "1.4",
+            }}
+          >
+            Hide
+          </button>
+        </div>
       </div>
       <div className="line-fields-grid" style={{
         display: "grid",
@@ -171,6 +191,7 @@ function LineCard({ line, vsName, data, onChange }) {
 
 export default function EOSReportApp() {
   const [formData, setFormData] = useState(emptyFormData());
+  const [hiddenLines, setHiddenLines] = useState(new Set());
   const [emailCopied, setEmailCopied] = useState(false);
   const [activeTab, setActiveTab] = useState("entry");
 
@@ -182,6 +203,22 @@ export default function EOSReportApp() {
       lines: { ...p.lines, [line]: { ...p.lines[line], [field]: value } },
     }));
 
+  const handleHideLine = (vsId, line) =>
+    setHiddenLines((prev) => {
+      const next = new Set(prev);
+      next.add(`${vsId}:${line}`);
+      return next;
+    });
+
+  const handleShowLine = (vsId, line) =>
+    setHiddenLines((prev) => {
+      const next = new Set(prev);
+      next.delete(`${vsId}:${line}`);
+      return next;
+    });
+
+  const activeLines = ALL_LINES.filter(({ vsId, line }) => !hiddenLines.has(`${vsId}:${line}`));
+
   const handleDownloadAll = () => {
     const reports = [
       { title: "End of Shift Report", suffix: "EOS" },
@@ -190,12 +227,12 @@ export default function EOSReportApp() {
       { title: "Pre-Post Shift Report", suffix: "PrePost" },
     ];
     reports.forEach(({ title, suffix }) => {
-      const csv = generateCSV(formData, title);
+      const csv = generateCSV(formData, title, activeLines);
       downloadCSV(csv, `BAK_${suffix}_${formData.date}_${formData.shift}.csv`);
     });
   };
 
-  const emailBody = generateEmailBody(formData);
+  const emailBody = generateEmailBody(formData, activeLines);
 
   const handleCopyEmail = () => {
     navigator.clipboard.writeText(emailBody);
@@ -207,8 +244,8 @@ export default function EOSReportApp() {
     if (window.confirm("Reset all fields?")) setFormData(emptyFormData());
   };
 
-  const filledLines = ALL_LINES.filter(({ line }) => formData.lines[line].output).length;
-  const progress = Math.round((filledLines / ALL_LINES.length) * 100);
+  const filledLines = activeLines.filter(({ line }) => formData.lines[line].output).length;
+  const progress = activeLines.length > 0 ? Math.round((filledLines / activeLines.length) * 100) : 0;
 
   const inputStyle = {
     background: "#1a1f2e", border: "1px solid #2a3347",
@@ -245,7 +282,7 @@ export default function EOSReportApp() {
             background: "#1a1f2e", padding: "4px 12px", borderRadius: "20px",
             border: "1px solid #2a3347",
           }}>
-            {filledLines}/{ALL_LINES.length} lines entered
+            {filledLines}/{activeLines.length} lines entered
           </div>
           <div style={{
             width: "120px", height: "8px", background: "#1a1f2e",
@@ -344,37 +381,80 @@ export default function EOSReportApp() {
             }}>
               Production Data
             </div>
-            {VALUE_STREAMS.map((vs) => (
-              <div key={vs.id} style={{ marginBottom: "40px" }}>
-                <div style={{
-                  display: "flex", alignItems: "center", gap: "12px",
-                  marginBottom: "20px", paddingBottom: "12px",
-                  borderBottom: "2px solid #1e2636",
-                }}>
+            {VALUE_STREAMS.map((vs) => {
+              const visibleLines = vs.lines.filter((line) => !hiddenLines.has(`${vs.id}:${line}`));
+              const hiddenVsLines = vs.lines.filter((line) => hiddenLines.has(`${vs.id}:${line}`));
+              return (
+                <div key={vs.id} style={{ marginBottom: "40px" }}>
                   <div style={{
-                    background: "#FFB800", color: "#000", fontWeight: "700",
-                    fontSize: "11px", padding: "3px 10px", borderRadius: "3px",
-                    letterSpacing: "0.08em",
+                    display: "flex", alignItems: "center", gap: "12px",
+                    marginBottom: "20px", paddingBottom: "12px",
+                    borderBottom: "2px solid #1e2636",
                   }}>
-                    {vs.id === "vs1" ? "VS1" : "VS2"}
+                    <div style={{
+                      background: "#FFB800", color: "#000", fontWeight: "700",
+                      fontSize: "11px", padding: "3px 10px", borderRadius: "3px",
+                      letterSpacing: "0.08em",
+                    }}>
+                      {vs.id === "vs1" ? "VS1" : "VS2"}
+                    </div>
+                    <span style={{
+                      color: "#e2e8f0", fontSize: "14px", letterSpacing: "0.05em",
+                      textTransform: "uppercase", whiteSpace: "nowrap",
+                      fontWeight: "600",
+                    }}>{vs.name}</span>
                   </div>
-                  <span style={{
-                    color: "#e2e8f0", fontSize: "14px", letterSpacing: "0.05em",
-                    textTransform: "uppercase", whiteSpace: "nowrap",
-                    fontWeight: "600",
-                  }}>{vs.name}</span>
+                  {visibleLines.map((line) => (
+                    <LineCard
+                      key={line}
+                      vsId={vs.id}
+                      line={line}
+                      vsName={vs.name}
+                      data={formData.lines[line]}
+                      onChange={handleLine}
+                      onHide={handleHideLine}
+                    />
+                  ))}
+                  {hiddenVsLines.length > 0 && (
+                    <div style={{
+                      display: "flex", flexWrap: "wrap", gap: "8px",
+                      padding: "12px 16px",
+                      background: "#0f1319",
+                      border: "1px dashed #2a3347",
+                      borderRadius: "6px",
+                    }}>
+                      <span style={{
+                        fontSize: "11px", color: "#4a5568",
+                        letterSpacing: "0.08em", textTransform: "uppercase",
+                        alignSelf: "center", marginRight: "4px",
+                      }}>
+                        Hidden:
+                      </span>
+                      {hiddenVsLines.map((line) => (
+                        <button
+                          key={line}
+                          onClick={() => handleShowLine(vs.id, line)}
+                          title={`Restore ${line}`}
+                          style={{
+                            background: "transparent",
+                            border: "1px solid #2a3347",
+                            borderRadius: "4px",
+                            color: "#64748b",
+                            cursor: "pointer",
+                            fontSize: "11px",
+                            padding: "3px 10px",
+                            fontFamily: "inherit",
+                            letterSpacing: "0.05em",
+                          }}
+                        >
+                          + {line}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
-                {vs.lines.map((line) => (
-                  <LineCard
-                    key={line}
-                    line={line}
-                    vsName={vs.name}
-                    data={formData.lines[line]}
-                    onChange={handleLine}
-                  />
-                ))}
-              </div>
-            ))}
+              );
+            })}
 
             {/* Notes */}
             <div style={{
