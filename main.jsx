@@ -13,7 +13,8 @@ const ALL_LINES = VALUE_STREAMS.flatMap((vs) =>
 
 const EMPTY_LINE = {
   output: "",
-  hpu: "",
+  hpu: "0",
+  hoursWorked: "10",
   firstPassYield: "",
   headcount: "",
   orderAtPackout: "",
@@ -21,6 +22,14 @@ const EMPTY_LINE = {
   remainingOnRunSheet: "",
   changeovers: "",
 };
+
+function calculateHPU(lineData) {
+  const headcount = parseFloat(lineData.headcount);
+  const hoursWorked = parseFloat(lineData.hoursWorked);
+  const output = parseFloat(lineData.output);
+  if (isNaN(headcount) || isNaN(hoursWorked) || isNaN(output) || output === 0) return "0";
+  return (headcount * hoursWorked / output).toFixed(2);
+}
 
 const SHIFTS = ["Day", "Night"];
 
@@ -40,14 +49,14 @@ function emptyFormData() {
 
 function generateCSV(data, title, activeLines) {
   const headers = [
-    "Line", "Output", "HPU", "First Pass Yield (%)",
+    "Line", "Output", "HPU", "Hours Worked", "First Pass Yield (%)",
     "Headcount", "Order at Packout", "Remaining on Order",
     "Remaining on Run Sheet", "Changeovers",
   ];
   const rows = activeLines.map(({ line }) => {
     const l = data.lines[line];
     return [
-      line, l.output, l.hpu, l.firstPassYield,
+      line, l.output, l.hpu, l.hoursWorked, l.firstPassYield,
       l.headcount, l.orderAtPackout, l.remainingOnOrder,
       l.remainingOnRunSheet, l.changeovers,
     ].join(",");
@@ -77,8 +86,8 @@ function generateEmailBody(data, activeLines) {
   const lineRows = activeLines.map(({ vsName, line }) => {
     const l = data.lines[line];
     return `  ${line} (${vsName})
-    Output: ${l.output || "—"}  |  HPU: ${l.hpu || "—"}  |  FPY: ${l.firstPassYield || "—"}%
-    Headcount: ${l.headcount || "—"}  |  Changeovers: ${l.changeovers || "—"}
+    Output: ${l.output || "—"}  |  HPU: ${l.hpu || "0"}  |  FPY: ${l.firstPassYield || "—"}%
+    Headcount: ${l.headcount || "—"}  |  Hours Worked: ${l.hoursWorked || "10"}  |  Changeovers: ${l.changeovers || "—"}
     Order @ Packout: ${l.orderAtPackout || "—"}  |  Remaining on Order: ${l.remainingOnOrder || "—"}  |  Remaining on Run Sheet: ${l.remainingOnRunSheet || "—"}`;
   }).join("\n\n");
 
@@ -104,9 +113,10 @@ Generated automatically by BAK EOS System`;
 function LineCard({ vsId, line, vsName, data, onChange, onHide }) {
   const fields = [
     { key: "output", label: "Output", type: "number" },
-    { key: "hpu", label: "HPU", type: "number" },
-    { key: "firstPassYield", label: "FPY %", type: "number" },
     { key: "headcount", label: "Headcount", type: "number" },
+    { key: "hoursWorked", label: "Hours Worked", type: "number" },
+    { key: "hpu", label: "HPU", type: "number", readOnly: true },
+    { key: "firstPassYield", label: "FPY %", type: "number" },
     { key: "orderAtPackout", label: "Order @ Packout", type: "text" },
     { key: "remainingOnOrder", label: "Remaining on Order", type: "number" },
     { key: "remainingOnRunSheet", label: "Remaining on Run Sheet", type: "number" },
@@ -162,7 +172,7 @@ function LineCard({ vsId, line, vsName, data, onChange, onHide }) {
         gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))",
         gap: "12px",
       }}>
-        {fields.map(({ key, label, type }) => (
+        {fields.map(({ key, label, type, readOnly }) => (
           <div key={key}>
             <label style={{
               display: "block", fontSize: "12px", color: "#94a3b8",
@@ -172,12 +182,14 @@ function LineCard({ vsId, line, vsName, data, onChange, onHide }) {
             <input
               type={type}
               value={data[key]}
+              readOnly={readOnly}
               onChange={(e) => onChange(line, key, e.target.value)}
               style={{
-                width: "100%", background: "#0f1319", border: "1px solid #2a3347",
-                borderRadius: "4px", padding: "8px 10px", color: "#e2e8f0",
+                width: "100%", background: readOnly ? "#0a0d14" : "#0f1319", border: "1px solid #2a3347",
+                borderRadius: "4px", padding: "8px 10px", color: readOnly ? "#64748b" : "#e2e8f0",
                 fontSize: "14px", outline: "none", boxSizing: "border-box",
                 fontFamily: "'JetBrains Mono', monospace",
+                cursor: readOnly ? "not-allowed" : undefined,
               }}
             />
           </div>
@@ -198,10 +210,16 @@ export default function EOSReportApp() {
   const handleMeta = (key, value) => setFormData((p) => ({ ...p, [key]: value }));
 
   const handleLine = (line, field, value) =>
-    setFormData((p) => ({
-      ...p,
-      lines: { ...p.lines, [line]: { ...p.lines[line], [field]: value } },
-    }));
+    setFormData((p) => {
+      const updatedLine = { ...p.lines[line], [field]: value };
+      if (field === "output" || field === "headcount" || field === "hoursWorked") {
+        updatedLine.hpu = calculateHPU(updatedLine);
+      }
+      return {
+        ...p,
+        lines: { ...p.lines, [line]: updatedLine },
+      };
+    });
 
   const handleHideLine = (vsId, line) =>
     setHiddenLines((prev) => {
