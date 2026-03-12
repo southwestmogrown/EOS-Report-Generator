@@ -236,9 +236,16 @@ export default function EOSReportApp() {
       return next;
     });
 
-  const currentStream = VALUE_STREAMS.find((vs) => vs.id === activeStream);
+  const currentStream = VALUE_STREAMS.find((vs) => vs.id === activeStream) || VALUE_STREAMS[0];
   const streamLines = ALL_LINES.filter(({ vsId }) => vsId === activeStream);
   const activeLines = streamLines.filter(({ vsId, line }) => !hiddenLines.has(`${vsId}:${line}`));
+  const visibleLines = currentStream.lines.filter((line) => !hiddenLines.has(`${currentStream.id}:${line}`));
+  const hiddenVsLines = currentStream.lines.filter((line) => hiddenLines.has(`${currentStream.id}:${line}`));
+
+  const handleStreamChange = (streamId) => {
+    setActiveStream(streamId);
+    setActiveView("entry");
+  };
 
   const handleDownloadAll = () => {
     const reports = [
@@ -326,7 +333,7 @@ export default function EOSReportApp() {
         {VALUE_STREAMS.map((vs) => (
           <button
             key={vs.id}
-            onClick={() => { setActiveStream(vs.id); setActiveView("entry"); }}
+            onClick={() => handleStreamChange(vs.id)}
             style={{
               background: "none", border: "none", cursor: "pointer",
               padding: "14px 20px", fontSize: "13px", letterSpacing: "0.08em",
@@ -402,63 +409,57 @@ export default function EOSReportApp() {
             }}>
               Production Data — {currentStream.name}
             </div>
-            {(() => {
-              const visibleLines = currentStream.lines.filter((line) => !hiddenLines.has(`${currentStream.id}:${line}`));
-              const hiddenVsLines = currentStream.lines.filter((line) => hiddenLines.has(`${currentStream.id}:${line}`));
-              return (
-                <div style={{ marginBottom: "40px" }}>
-                  {visibleLines.map((line) => (
-                    <LineCard
-                      key={`${currentStream.id}:${line}`}
-                      lineKey={`${currentStream.id}:${line}`}
-                      vsId={currentStream.id}
-                      line={line}
-                      vsName={currentStream.name}
-                      data={formData.lines[`${currentStream.id}:${line}`]}
-                      onChange={handleLine}
-                      onHide={handleHideLine}
-                    />
+            <div style={{ marginBottom: "40px" }}>
+              {visibleLines.map((line) => (
+                <LineCard
+                  key={`${currentStream.id}:${line}`}
+                  lineKey={`${currentStream.id}:${line}`}
+                  vsId={currentStream.id}
+                  line={line}
+                  vsName={currentStream.name}
+                  data={formData.lines[`${currentStream.id}:${line}`]}
+                  onChange={handleLine}
+                  onHide={handleHideLine}
+                />
+              ))}
+              {hiddenVsLines.length > 0 && (
+                <div style={{
+                  display: "flex", flexWrap: "wrap", gap: "8px",
+                  padding: "12px 16px",
+                  background: "#0f1319",
+                  border: "1px dashed #2a3347",
+                  borderRadius: "6px",
+                }}>
+                  <span style={{
+                    fontSize: "11px", color: "#4a5568",
+                    letterSpacing: "0.08em", textTransform: "uppercase",
+                    alignSelf: "center", marginRight: "4px",
+                  }}>
+                    Hidden:
+                  </span>
+                  {hiddenVsLines.map((line) => (
+                    <button
+                      key={line}
+                      onClick={() => handleShowLine(currentStream.id, line)}
+                      title={`Restore ${line}`}
+                      style={{
+                        background: "transparent",
+                        border: "1px solid #2a3347",
+                        borderRadius: "4px",
+                        color: "#64748b",
+                        cursor: "pointer",
+                        fontSize: "11px",
+                        padding: "3px 10px",
+                        fontFamily: "inherit",
+                        letterSpacing: "0.05em",
+                      }}
+                    >
+                      + {line}
+                    </button>
                   ))}
-                  {hiddenVsLines.length > 0 && (
-                    <div style={{
-                      display: "flex", flexWrap: "wrap", gap: "8px",
-                      padding: "12px 16px",
-                      background: "#0f1319",
-                      border: "1px dashed #2a3347",
-                      borderRadius: "6px",
-                    }}>
-                      <span style={{
-                        fontSize: "11px", color: "#4a5568",
-                        letterSpacing: "0.08em", textTransform: "uppercase",
-                        alignSelf: "center", marginRight: "4px",
-                      }}>
-                        Hidden:
-                      </span>
-                      {hiddenVsLines.map((line) => (
-                        <button
-                          key={line}
-                          onClick={() => handleShowLine(currentStream.id, line)}
-                          title={`Restore ${line}`}
-                          style={{
-                            background: "transparent",
-                            border: "1px solid #2a3347",
-                            borderRadius: "4px",
-                            color: "#64748b",
-                            cursor: "pointer",
-                            fontSize: "11px",
-                            padding: "3px 10px",
-                            fontFamily: "inherit",
-                            letterSpacing: "0.05em",
-                          }}
-                        >
-                          + {line}
-                        </button>
-                      ))}
-                    </div>
-                  )}
                 </div>
-              );
-            })()}
+              )}
+            </div>
 
             {/* Notes */}
             <div style={{
